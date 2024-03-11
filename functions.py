@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
-from nsepy import get_history
+# from nsepy import get_history
 
 tools = [
 {

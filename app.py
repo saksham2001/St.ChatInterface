@@ -9,7 +9,6 @@ from functions import get_current_weather, send_email, tools
 import os
 import base64
 import requests
-import datetime
 from utils import Base, Chat, Chat_Line
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
