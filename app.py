@@ -8,7 +8,7 @@ The user can also modify the model parameters and view the chat history.
 Developed by: Saksham Bhutani
 '''
 
-from functions import get_current_weather, send_email, tools
+from functions import tools, get_current_weather, send_email, get_weather_forecast
 from utils import Chat, Chat_Line
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -37,15 +37,22 @@ st.set_page_config(page_title="Saksham's Chatbot", layout="wide", page_icon='ðŸ¤
                                     }
     )
 
-# Create the openai client
-openai_client = OpenAI()
-api_key = os.environ.get("OPENAI_API_KEY")
+# check if either of the API keys are available
+if ("OPENAI_API_KEY" in os.environ) or "ANTHROPIC_API_KEY" in os.environ:
+    if "OPENAI_API_KEY" in os.environ:
+        # Create the openai client
+        openai_client = OpenAI()
+        api_key = os.environ.get("OPENAI_API_KEY")
 
-# Create the anthropic client
-anthropic_client = Anthropic(
-    # This is the default and can be omitted
-    api_key=os.environ.get("ANTHROPIC_API_KEY"),
-)
+    if "ANTHROPIC_API_KEY" in os.environ:
+        # Create the anthropic client
+        anthropic_client = Anthropic(
+            # This is the default and can be omitted
+            api_key=os.environ.get("ANTHROPIC_API_KEY"),
+        )
+else:
+    # If environment variable is not set, load the setup page
+    st.page_link('https://github.com/saksham2001/St.ChatInterface', 'Setup Page')
 
 # System Prompt to add before the users input
 system_prompt = ""
@@ -59,6 +66,13 @@ models = {'gpt-3.5-turbo-0125' : [0.50, 1.50, False, True],
           'claude-3-opus-20240229': [15.00, 75.00, True, False]
           }
 
+# Dictionary of available functions for the models
+available_functions = {
+    "get_current_weather": get_current_weather,
+    "send_email": send_email,
+    "get_weather_forecast": get_weather_forecast
+}
+
 def call_function(tool_call):
     '''
     This function calls the function specified in the tool_call object and returns the response to the model.
@@ -69,13 +83,6 @@ def call_function(tool_call):
     Returns:
         str: Response from the model
     '''
-
-    # Dictionary of available functions for the models
-    available_functions = {
-        "get_current_weather": get_current_weather,
-        "send_email": send_email
-    }
-    
     with st.spinner("Processing results..."):
         # Call all the functions and get the response
         for tool_call in tool_calls:
@@ -149,6 +156,12 @@ def select_model():
     This is the callback function to change the model if the user selects a different model.
     '''
     st.session_state.model = st.session_state.model_input
+
+    # Check if the api key of the model is loaded
+    if st.session_state.model[:3] == "gpt" and "OPENAI_API_KEY" not in os.environ:
+        st.warning("OpenAI API Key not found. Please set the OPENAI_API_KEY environment variable.")
+    elif st.session_state.model[:3] == "cla" and "ANTHROPIC_API_KEY" not in os.environ:
+        st.warning("Anthropic API Key not found. Please set the ANTHROPIC_API_KEY environment variable.")
 
     # Add image input option if the model is multimodal
     # if models[st.session_state.model][2]:
@@ -233,8 +246,9 @@ with st.sidebar:
         st.session_state.save_history_toggle = st.toggle('Save Chat History', value=True, key='save_history')
 
         # check if function calling is available for the model
-        if 'model' in st.session_state and models[st.session_state.model][3]:
-            st.session_state.function_calling_toggle = st.toggle('Enable Function Calling', value=True, key='function_calling')
+        if 'model' in st.session_state :
+            if st.session_state.model is not None and models[st.session_state.model][3]:
+                st.session_state.function_calling_toggle = st.toggle('Enable Function Calling', value=True, key='function_calling')
 
         st.session_state.verbose_toggle = st.toggle('Verbose', value=False, key='verbose')
         st.session_state.temperature_input = st.slider('Temperature for the model', min_value=0.0, max_value=1.0, value=0.0, step=0.01, key='temperature')
@@ -259,7 +273,7 @@ st.session_state.messages = []
 st.session_state.backend_messages = []
 
 # If no lines in the chat, create a option to select the model
-if len(chat.lines) == 0 and 'model' in st.session_state:
+if len(chat.lines) == 0 and st.session_state.model is None:
     # Model selection widget
     model_input = st.selectbox(
         'Select the Model',
