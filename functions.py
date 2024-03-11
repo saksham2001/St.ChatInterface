@@ -13,12 +13,6 @@ import json
 import os
 # from nsepy import get_history
 
-if "OPENWEATHER_API_KEY" in os.environ:
-    openweather_api_key = os.environ.get("OPENWEATHER_API_KEY")
-else:
-    # If environment variable is not set, load the setup page
-    st.page_link('https://github.com/saksham2001/St.ChatInterface', 'Setup Page')
-
 # Define the tools available to the models
 tools = [
 {
@@ -102,6 +96,12 @@ def get_geocode(city_name):
     Returns:
         dict: latitude and longitude
     '''
+    if "OPENWEATHER_API_KEY" in os.environ:
+        openweather_api_key = os.environ.get("OPENWEATHER_API_KEY")
+    else:
+        st.warning("Please set the OPENWEATHER_API_KEY environment variable to use this function.")
+        return json.dumps({"latitude": "unknown", "longitude": "unknown"})
+    
     api_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&appid={openweather_api_key}"
     response = requests.get(api_url)
 
@@ -124,6 +124,15 @@ def get_current_weather(city_name, unit='celsius'):
     Returns:
         dict: weather data
     '''
+    if "OPENWEATHER_API_KEY" in os.environ:
+        openweather_api_key = os.environ.get("OPENWEATHER_API_KEY")
+    else:
+        st.warning("Please set the OPENWEATHER_API_KEY environment variable to use this function.")
+        return json.dumps({"weather_description": "unknown", "temperature": "unknown", "temperature_feels_like": "unknown",
+                "termerature_minimum": "unknown", "temperature_maximum": "unknown", "temperature_unit": "unknown",
+                "humidity": "unknown", "humidity_unit": "unknown", "wind_speed": "unknown", "clouds": "unknown",
+                "visibility": "unknown", "visibility_unit": "unknown"})
+
     geocode = json.loads(get_geocode(city_name))
     latitude, longitude = geocode['latitude'], geocode['longitude']
 
@@ -164,6 +173,11 @@ def get_weather_forecast(city_name, unit="celcius"):
     Returns:
         dict: weather forecast
     '''
+    if "OPENWEATHER_API_KEY" in os.environ:
+        openweather_api_key = os.environ.get("OPENWEATHER_API_KEY")
+    else:
+        st.warning("Please set the OPENWEATHER_API_KEY environment variable to use this function.")
+        return json.dumps({"forecast": "unknown"})
 
     geocode = json.loads(get_geocode(city_name))
     latitude, longitude = geocode['latitude'], geocode['longitude']

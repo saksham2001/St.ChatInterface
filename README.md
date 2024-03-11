@@ -42,9 +42,17 @@ python3 create_db.py
 
 Replace `<your_api_key>` with respective API keys for your OpenAI and Anthropic accounts.
 
+**Note:** You only need to set `OPENAI_API_KEY` if you are using OpenAI's models and `ANTHROPIC_API_KEY` if you are using Anthropic's models. If you want to use both, you need to set both.
+
 ```bash
 export OPENAI_API_KEY='<your_api_key>'
 export ANTHROPIC_API_KEY='<your_api_key>'
 
 streamlit run app.py
+```
+
+[Optional] To give access to weather information to the models, you need to set `OPENWEATHER_API_KEY` environment variable.
+
+```bash
+export OPENWEATHER_API_KEY='<your_api_key>'
 ```
