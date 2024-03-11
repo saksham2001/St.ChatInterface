@@ -1,6 +1,5 @@
 # St.ChatInterface
-
-### A Streamlit powered chat interface to use powerful LLM models by OpenAI and Anthropic.
+**A Streamlit powered chat interface to use powerful LLM models by OpenAI and Anthropic.**
 
 ## Features
 - Cheaper than individual ChatGPT and Anthropic subscriptions.
