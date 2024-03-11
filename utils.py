@@ -1,3 +1,11 @@
+'''
+Streamlit powereded Chatbot Interface for OpenAI and Anthropics API.
+
+This script provides the definations for the database tables for the app.py script.
+
+Developed by: Saksham Bhutani
+'''
+
 from sqlalchemy import create_engine, Column, ForeignKey, Integer, String, DateTime, Boolean, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship

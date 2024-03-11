@@ -1,8 +1,17 @@
+'''
+Streamlit powereded Chatbot Interface for OpenAI and Anthropics API.
+
+This script provides the functions for the chatbot to use in the app.py script.
+
+Developed by: Saksham Bhutani
+'''
+
 import streamlit as st
 import pandas as pd
 import json
 # from nsepy import get_history
 
+# Define the tools available to the models
 tools = [
 {
     "type": "function",

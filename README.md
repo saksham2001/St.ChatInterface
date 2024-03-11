@@ -4,10 +4,11 @@
 
 ## Features
 - Cheaper than individual ChatGPT and Anthropic subscriptions.
-- Allows function calling.
 - Saves all the chats and their respective responses in a local database.
-- Allows model to produce interactive graphs.
-- Multimodal model support (Coming soon).
+- Data will not be used to train LLMs.
+- Allows function calling.
+- [Coming Soon] Allows model to produce interactive elements (graphs, maps, etc).
+- [Coming Soon] Multimodal model support. 
 
 ## Models Available
 | Model Name | Price per 1M Input Tokens | Price per 1M Output Tokens | Multimodal |
@@ -34,6 +35,7 @@ pip install -r requirements.txt
 Setup the database to save all the chats and their respective responses.
     
 ```bash
+mkdir data
 python3 create_db.py
 ```
 

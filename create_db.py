@@ -1,3 +1,11 @@
+'''
+Streamlit powereded Chatbot Interface for OpenAI and Anthropics API.
+
+This script creates a database for chatbot to store the conversation history.
+
+Developed by: Saksham Bhutani
+'''
+
 from sqlalchemy import create_engine
 from utils import Base
 
