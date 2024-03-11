@@ -8,19 +8,19 @@ The user can also modify the model parameters and view the chat history.
 Developed by: Saksham Bhutani
 '''
 
-from openai import OpenAI
-import streamlit as st
-import json
 from functions import get_current_weather, send_email, tools
-import os
-import base64
-import requests
-from utils import Base, Chat, Chat_Line
+from utils import Chat, Chat_Line
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
 from anthropic import Anthropic
+from openai import OpenAI
+import streamlit as st
+import base64
 import requests
+import json
+import os
+
 
 # Connect to the database
 engine = create_engine('sqlite:///data/chat_database.db')  # Make sure this matches the URI you used to create the db
@@ -50,13 +50,13 @@ anthropic_client = Anthropic(
 # System Prompt to add before the users input
 system_prompt = ""
 
-# models and input/output token price per million tokens (in USD), and if tools are allowed
-models = {'gpt-3.5-turbo-0125' : [0.50, 1.50, False],
-          'gpt-4-0613' : [30.00, 60.00, False],
-          'gpt-4-0125-preview' : [30.00, 60.00, False],
-          'gpt-4-1106-vision-preview' : [10.00, 30.00, True],
-          'claude-3-sonnet-20240229': [3.00, 15.00, True],
-          'claude-3-opus-20240229': [15.00, 75.00, True]
+# models and input/output token price per million tokens (in USD), and if multimodal, if function calling available
+models = {'gpt-3.5-turbo-0125' : [0.50, 1.50, False, True],
+          'gpt-4-0613' : [30.00, 60.00, False, True],
+          'gpt-4-0125-preview' : [30.00, 60.00, False, True],
+          'gpt-4-1106-vision-preview' : [10.00, 30.00, True, False],
+          'claude-3-sonnet-20240229': [3.00, 15.00, True, False],
+          'claude-3-opus-20240229': [15.00, 75.00, True, False]
           }
 
 def call_function(tool_call):
@@ -144,14 +144,15 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def change_model():
+def select_model():
     '''
     This is the callback function to change the model if the user selects a different model.
     '''
+    st.session_state.model = st.session_state.model_input
 
     # Add image input option if the model is multimodal
-    if models[st.session_state.model][2]:
-        st.session_state.image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    # if models[st.session_state.model][2]:
+    #     image_input_placeholder.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 def update_cost():
     '''
@@ -181,6 +182,7 @@ def start_new_chat():
     # Clear the chat messages
     st.session_state.messages = []
     st.session_state.backend_messages = []
+    st.session_state.model = None
 
 def delete_current_chat():
     '''
@@ -229,7 +231,11 @@ with st.sidebar:
     with st.expander('Modify Model Parameters'):
         st.session_state.user_id_input = st.text_input('User ID', value='default', key='user_id')
         st.session_state.save_history_toggle = st.toggle('Save Chat History', value=True, key='save_history')
-        st.session_state.function_calling_toggle = st.toggle('Enable Function Calling', value=True, key='function_calling')
+
+        # check if function calling is available for the model
+        if 'model' in st.session_state and models[st.session_state.model][3]:
+            st.session_state.function_calling_toggle = st.toggle('Enable Function Calling', value=True, key='function_calling')
+
         st.session_state.verbose_toggle = st.toggle('Verbose', value=False, key='verbose')
         st.session_state.temperature_input = st.slider('Temperature for the model', min_value=0.0, max_value=1.0, value=0.0, step=0.01, key='temperature')
         st.session_state.seed_input = st.number_input('Seed for the model', min_value=0, max_value=100, step=1, value=0, key='seed')
@@ -253,26 +259,33 @@ st.session_state.messages = []
 st.session_state.backend_messages = []
 
 # If no lines in the chat, create a option to select the model
-if len(chat.lines) == 0:
+if len(chat.lines) == 0 and 'model' in st.session_state:
     # Model selection widget
-    model = st.selectbox(
+    model_input = st.selectbox(
         'Select the Model',
         options=list(models.keys()),
-        index=0, on_change=change_model, disabled=False)
+        index=0, disabled=False, key="model_input")
+    
+    # Model selection button
+    st.button('Start Chatting...', on_click=select_model, use_container_width=True)
     
     # Update model in the database
-    chat.model = st.session_state.model
+    chat.model = st.session_state.model_input
     session.commit()
 else:
-    model = chat.model
-    st.markdown(f"#### Model: {model}")
-    for line in chat.lines:
-        st.session_state.messages.append({"role": line.role, "content": line.line_text})
-        st.session_state.backend_messages.append({"role": line.role, "content": line.line_backend_text})
+    if len(chat.lines) == 0:
+        st.markdown(f"#### Model: {chat.model}")
+        st.markdown("## Start a new chat by saying something!")
+    else:
+        st.session_state.model = chat.model
+        st.markdown(f"#### Model: {st.session_state.model}")
+        for line in chat.lines:
+            st.session_state.messages.append({"role": line.role, "content": line.line_text})
+            st.session_state.backend_messages.append({"role": line.role, "content": line.line_backend_text})
 
-        # Display chat messages
-        with st.chat_message(line.role):
-            st.markdown(line.line_text)
+            # Display chat messages
+            with st.chat_message(line.role):
+                st.markdown(line.line_text)
 
     # React to user input
     if prompt := st.chat_input("Say something!"):
@@ -374,8 +387,8 @@ else:
 
             update_cost()
 
-            # If tools calls are required, call the function
-            if tool_calls:
+            # If tools calls are required and function calling is enabled and the model supports it, call the function
+            if tool_calls and st.session_state.function_calling_toggle and models[st.session_state.model][3]:
                 st.session_state.backend_messages.append(response_message)
                 response_message = call_function(tool_calls)
         
@@ -396,3 +409,4 @@ else:
 
         # Commit the changes
         session.commit()
+    # image_input_placeholder = st.empty()
