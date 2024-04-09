@@ -8,7 +8,7 @@ The user can also modify the model parameters and view the chat history.
 Developed by: Saksham Bhutani
 '''
 
-from functions import tools, get_current_weather, send_email, get_weather_forecast
+from functions import tools, get_current_weather, get_weather_forecast
 from utils import Chat, Chat_Line
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -70,7 +70,7 @@ models = {'gpt-3.5-turbo-0125' : [0.50, 1.50, False, True],
 # Dictionary of available functions for the models
 available_functions = {
     "get_current_weather": get_current_weather,
-    "send_email": send_email,
+    # "send_email": send_email,
     "get_weather_forecast": get_weather_forecast
 }
 

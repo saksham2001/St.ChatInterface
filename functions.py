@@ -83,7 +83,7 @@ tools = [
 def send_email(to_email, title, body):
     """Send email information"""
     # In production, this could be your backend API or an external API
-    print(f"Email sent to {to_email} with title: {title} and body: {body}")
+    # print(f"Email sent to {to_email} with title: {title} and body: {body}")
     return json.dumps({"to_email": to_email, "title": title, "body": body})
 
 def get_geocode(city_name):
