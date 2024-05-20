@@ -74,7 +74,7 @@ available_functions = {
     "get_weather_forecast": get_weather_forecast
 }
 
-def call_function(tool_call):
+def call_function(tool_calls):
     '''
     This function calls the function specified in the tool_call object and returns the response to the model.
 
@@ -104,7 +104,7 @@ def call_function(tool_call):
 
         # Call the model again with the updated backend messages
         second_response = openai_client.chat.completions.create(
-            model=st.session_state.model,
+            model=st.session_state.model1,
             messages=st.session_state.backend_messages,
         )
 
@@ -156,12 +156,19 @@ def select_model():
     '''
     This is the callback function to change the model if the user selects a different model.
     '''
-    st.session_state.model = st.session_state.model_input
+    st.session_state.model1 = st.session_state.model1_input
+    st.session_state.model2 = st.session_state.model2_input
 
     # Check if the api key of the model is loaded
-    if st.session_state.model[:3] == "gpt" and "OPENAI_API_KEY" not in os.environ:
+    if st.session_state.model1[:3] == "gpt" and "OPENAI_API_KEY" not in os.environ:
         st.warning("OpenAI API Key not found. Please set the OPENAI_API_KEY environment variable.")
-    elif st.session_state.model[:3] == "cla" and "ANTHROPIC_API_KEY" not in os.environ:
+    elif st.session_state.model1[:3] == "cla" and "ANTHROPIC_API_KEY" not in os.environ:
+        st.warning("Anthropic API Key not found. Please set the ANTHROPIC_API_KEY environment variable.")
+
+    # Check if the api key of the model is loaded
+    if st.session_state.model2[:3] == "gpt" and "OPENAI_API_KEY" not in os.environ:
+        st.warning("OpenAI API Key not found. Please set the OPENAI_API_KEY environment variable.")
+    elif st.session_state.model2[:3] == "cla" and "ANTHROPIC_API_KEY" not in os.environ:
         st.warning("Anthropic API Key not found. Please set the ANTHROPIC_API_KEY environment variable.")
 
     # Add image input option if the model is multimodal
@@ -276,24 +283,31 @@ st.session_state.backend_messages = []
 # If no lines in the chat, create a option to select the model
 if len(chat.lines) == 0 and st.session_state.model is None:
     # Model selection widget
-    model_input = st.selectbox(
-        'Select the Model',
+    model1_input = st.selectbox(
+        'Select the Commander Model',
         options=list(models.keys()),
-        index=0, disabled=False, key="model_input")
+        index=0, disabled=False, key="model1_input")
+    
+    model2_input = st.selectbox(
+        'Select the Slave Model',
+        options=list(models.keys()),
+        index=0, disabled=False, key="model2_input")
     
     # Model selection button
     st.button('Start Chatting...', on_click=select_model, use_container_width=True)
     
     # Update model in the database
-    chat.model = st.session_state.model_input
+    chat.model1 = st.session_state.model1_input
+    chat.model2 = st.session_state.model2_input
     session.commit()
 else:
     if len(chat.lines) == 0:
-        st.markdown(f"#### Model: {chat.model}")
+        st.markdown(f"#### Commander Model: {chat.model1}")
+        st.markdown(f"#### Slave Model: {chat.model2}")
         st.markdown("## Start a new chat by saying something!")
     else:
-        st.session_state.model = chat.model
-        st.markdown(f"#### Model: {st.session_state.model}")
+        st.session_state.model1 = chat.model1
+        st.markdown(f"#### Model: {st.session_state.model1}")
         for line in chat.lines:
             st.session_state.messages.append({"role": line.role, "content": line.line_text})
             st.session_state.backend_messages.append({"role": line.role, "content": line.line_backend_text})
@@ -326,9 +340,9 @@ else:
         with st.spinner("Thinking..."):
             # Call the model
 
-            if (not models[st.session_state.model][2]) and st.session_state.model[:3] == "gpt": # OpenAI API call (text only)
+            if (not models[st.session_state.model1][2]) and st.session_state.model1[:3] == "gpt": # OpenAI API call (text only)
                 response = openai_client.chat.completions.create(
-                    model=st.session_state.model,
+                    model=st.session_state.model1,
                     messages=st.session_state.backend_messages,
                     tools=tools,
                     tool_choice="auto",
@@ -346,9 +360,9 @@ else:
                 model_reply = response.model
                 input_tokens = response.usage.completion_tokens
                 output_tokens = response.usage.prompt_tokens
-            elif st.session_state.model[:3] == "cla": # Anthropics API call
+            elif st.session_state.model1[:3] == "cla": # Anthropics API call
                 response = anthropic_client.messages.create(
-                    model=st.session_state.model,
+                    model=st.session_state.model1,
                     messages=st.session_state.backend_messages,
                     temperature=st.session_state.temperature,
                     max_tokens=st.session_state.max_tokens
@@ -369,7 +383,7 @@ else:
             #     base64_image = encode_image(st.session_state)
 
             #     payload = {
-            #         "model": st.session_state.model,
+            #         "model": st.session_state.model1,
             #         "messages": [
             #             {
             #             "role": "user",
@@ -403,7 +417,7 @@ else:
             update_cost()
 
             # If tools calls are required and function calling is enabled and the model supports it, call the function
-            if tool_calls and st.session_state.function_calling_toggle and models[st.session_state.model][3]:
+            if tool_calls and st.session_state.function_calling_toggle and models[st.session_state.model1][3]:
                 st.session_state.backend_messages.append(response_message)
                 response_message = call_function(tool_calls)
         

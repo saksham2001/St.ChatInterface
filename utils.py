@@ -19,14 +19,29 @@ class Chat(Base):
     __tablename__ = 'chat'
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    model = Column(String)
+    model1 = Column(String)
+    model2 = Column(String)
     total_cost = Column(Float)
+    mode = Column(String)
 
     # Establish relationship with Chat_Line
     lines = relationship("Chat_Line", back_populates="chat")
 
 # Define the Chat_Line table
-class Chat_Line(Base):
+class Chat_Line_Model1(Base):
+    __tablename__ = 'chat_line'
+    id = Column(Integer, primary_key=True)
+    chat_id = Column(Integer, ForeignKey('chat.id'))
+    role = Column(String)
+    line_text = Column(String)
+    line_backend_text = Column(String)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Establish relationship with Chat
+    chat = relationship("Chat", back_populates="lines")
+
+# Define the Chat_Line table
+class Chat_Line_Model2(Base):
     __tablename__ = 'chat_line'
     id = Column(Integer, primary_key=True)
     chat_id = Column(Integer, ForeignKey('chat.id'))
