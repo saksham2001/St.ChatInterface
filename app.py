@@ -59,9 +59,10 @@ system_prompt = ""
 
 # models and input/output token price per million tokens (in USD), and if multimodal, if function calling available
 models = {'gpt-3.5-turbo-0125' : [0.50, 1.50, False, True],
-          'gpt-4-0613' : [30.00, 60.00, False, True],
-          'gpt-4-0125-preview' : [30.00, 60.00, False, True],
-          'gpt-4-1106-vision-preview' : [10.00, 30.00, True, False],
+          'gpt-4-0613' : [10.00, 30.00, False, True],
+          'gpt-4-0125-preview' : [10.00, 30.00, False, True],
+          'gpt-4-1106-vision-preview' : [10.00, 30.00, True, True],
+          'gpt-4o-2024-05-13': [5.00, 15.00, False, True],
           'claude-3-haiku-20240307': [0.25, 1.25, True, False],
           'claude-3-sonnet-20240229': [3.00, 15.00, True, False],
           'claude-3-opus-20240229': [15.00, 75.00, True, False]
